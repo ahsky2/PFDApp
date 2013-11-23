@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <h1><%= title %></h1>
+    <p><%= page %></p>
+<% if(hasAccessToken) { %>
+    <div>
+      <pre>
+<%- text %>
+      </pre>
+    </div>
+<% } %>
+    <div>
+      <a href='<%= link %>'><img src='<%= button %>'</a>
+    </div>
+  </body>
+</html>
