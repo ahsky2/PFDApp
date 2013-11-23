@@ -2,7 +2,9 @@ var FB = require('fb'),
     Step = require('step'),
     config = require('../config'),
     censor = require('../censor'),
-    AccessToken = require('../AccessToken');
+    AccessToken = require('../AccessToken'),
+    FBPagePhotoIL = require('../FBPagePhotoIL'),
+    DownloadPhotoIL = require('../DownloadPhotoIL');
 
 /*
  * GET home page.
@@ -36,6 +38,14 @@ exports.index = function(req, res){
       function () {
         // console.log('access token : ' + AccessToken.get());
         FB.setAccessToken(AccessToken.get());
+
+        if (!FBPagePhotoIL.isRunning()) {
+          FBPagePhotoIL.run();
+        }
+        
+        if (!DownloadPhotoIL.isRunning()) {
+          DownloadPhotoIL.run();
+        }
 
         FB.napi('/me', this);
       },

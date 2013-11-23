@@ -13,8 +13,9 @@ var express = require('express'),
     Step = require('step'),
     execFile = require('child_process').execFile,
     FB = require('fb'),
-    FBPagePhoto = require('./FBPagePhoto'),
-    censor = require('./censor');
+    censor = require('./censor'),
+    FBPagePhotoIL = require('./FBPagePhotoIL'),
+    DownloadPhotoIL = require('./DownloadPhotoIL');
 
 FB.options({
   appId:          config.facebook.appId,
@@ -22,6 +23,10 @@ FB.options({
   redirectUri:    config.facebook.redirectUri,
   scope:          config.facebook.scope
 });
+
+// Infinite Loop
+FBPagePhotoIL.init();
+DownloadPhotoIL.init();
 
 // Sqlite3 DB
 Step(
@@ -38,21 +43,13 @@ Step(
       // console.log('acess_token : ' + AccessToken.get());
       FB.setAccessToken(AccessToken.get());
 
-      Step(
-        function () {
-          FBPagePhoto.init(this);
-        },
-        function () {
-          FBPagePhoto.update(this);
-        },
-        function () {
-          FBPagePhoto.get(this);
-        },
-        function (obj) {
-          console.log(JSON.stringify(obj, censor(obj), 2));
-        }
-      );
-      
+      if (!FBPagePhotoIL.isRunning()) {
+        FBPagePhotoIL.run();
+      }
+
+      if (!DownloadPhotoIL.isRunning()) {
+        DownloadPhotoIL.run();
+      }
     }
   },
   function (error, stdout, stderr) {

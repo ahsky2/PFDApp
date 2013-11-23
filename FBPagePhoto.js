@@ -18,11 +18,11 @@
     //   fs.openSync(path.join(__dirname, file), 'w');
     // }
 
+    db = new sqlite3.Database(path.join(__dirname, file));
+
     init = function () {
       var callback_ = arguments[arguments.length - 1];
       var callback = (typeof(callback_) == 'function' ? callback_ : null);
-
-      db = new sqlite3.Database(path.join(__dirname, file));
 
       if (exist) {
         // console.log(file + ' exists.');
@@ -39,8 +39,6 @@
 
         exist = fs.existsSync(path.join(__dirname, file));
       }
-
-      db.close();
     }
 
     //SELECT pid, created, modified, src_big, src_big_width, src_big_height FROM photo WHERE pid IN (select pid from photo_tag where subject in (select page_id from page where name='PFDTest'))
@@ -68,7 +66,7 @@
               object_ids.push(photo_ids[object_id]);
             }
           }
-          console.log("SELECT object_id, created, modified, src_big, src_big_width, src_big_height FROM photo WHERE object_id IN (" + object_ids.toString() + ")");
+          // console.log("SELECT object_id, created, modified, src_big, src_big_width, src_big_height FROM photo WHERE object_id IN (" + object_ids.toString() + ")");
 
           FB.napi('fql', {
             q: "SELECT object_id, created, modified, src_big, src_big_width, src_big_height FROM photo WHERE object_id IN (" + object_ids.toString() + ")"
@@ -77,8 +75,6 @@
         function (err, res) {
           if (err) throw err;
 
-          db = new sqlite3.Database(path.join(__dirname, file));
-
           var group = this.group();
           
           fb_photos = res.data;
@@ -86,7 +82,6 @@
             var object_id = fb_photos[i].object_id;
             db.get('SELECT count(object_id) as count FROM photos WHERE object_id = ?', object_id, group());
           }
-          db.close();
         },
         function (err, rows) {
 
@@ -112,30 +107,53 @@
         function (err) {
           if (err) throw err;
 
-          console.log('A photo data insert.');
+          // console.log('A photo data insert.');
 
           callback();
-        }
-      );  
-    }
-
-
-    get = function () {
-      
-      var callback_ = arguments[arguments.length - 1];
-      var callback = (typeof(callback_) == 'function' ? callback_ : null);
-
-      Step(
-        function () {
-          db.all("SELECT object_id, src, width, height, created, modified, status FROM photos", this);
-        },
-        function (err, rows) {
-          callback(rows);
         }
       );
     }
 
-    set = function (value) {
+
+    get = function () {
+      var callback_ = arguments[arguments.length - 1];
+      var callback = (typeof(callback_) == 'function' ? callback_ : null);
+
+      if (arguments.length == 2 && typeof(arguments[0]) == 'string') {
+        var status = arguments[0];
+        Step(
+          function () {
+            db.all("SELECT object_id, src, width, height, created, modified, status FROM photos WHERE status = ?", status, this);
+          },
+          function (err, rows) {
+            callback(rows);
+          }
+        );
+      } else {
+        Step(
+          function () {
+            db.all("SELECT object_id, src, width, height, created, modified, status FROM photos", this);
+          },
+          function (err, rows) {
+            callback(rows);
+          }
+        );
+      }
+    }
+
+    set = function () {
+      var callback_ = arguments[arguments.length - 1];
+      var callback = (typeof(callback_) == 'function' ? callback_ : null);
+
+      if (arguments.length == 3 && typeof(arguments[0]) == 'string' && typeof(arguments[1]) == 'number') {
+        var status = arguments[0];
+        var object_id = arguments[1];
+
+        db.run('UPDATE photos SET status = ? WHERE object_id = ?', [status, object_id], function (err) {
+          if (err) throw err;
+          callback();
+        });
+      }
     }
 
     return {
