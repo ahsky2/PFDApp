@@ -5,6 +5,7 @@
         fs = require('fs'),
         path = require('path'),
         sqlite3 = require('sqlite3').verbose(),
+        config = require('./config'),
         censor = require('./censor');
 
     var file = 'photos.db',
@@ -57,6 +58,8 @@
         },
         function (err, res) {
           if (err) throw err;
+
+          // console.log(res);
 
           var object_ids = [];
           for (row_id in res.data) {

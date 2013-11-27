@@ -27,18 +27,23 @@ color_sets = [
   ['#FBF9EA', '#FBF9EA', '#F61B8B', '#FDB70D']
 ]
 
-def hex2rgb(value):
+def hex2bgr(value):
     value = value.lstrip('#')
     lv = len(value)
-    return list(int(value[i:i+lv/3], 16) for i in range(0, lv, lv/3))
+    ret =  list(int(value[i:i+lv/3], 16) for i in range(0, lv, lv/3))
+    ret.reverse()
+    return ret
 
-def rgb2hex(rgb):
-    return ('#%02x%02x%02x' % rgb).upper()
+def bgr2hex(bgr):
+    bgr.reverse()
+    return ('#%02x%02x%02x' % bgr).upper()
 
 def get():
+    print randint(0, len(color_sets)-1)
     color_set = color_sets[randint(0, len(color_sets)-1)]
     rgb_color_set = []
+    # print rgb_color_set
     for color in color_set:
-      rgb_color_set.append(hex2rgb(color))
+      rgb_color_set.append(hex2bgr(color))
 
     return rgb_color_set
