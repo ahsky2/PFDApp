@@ -4,7 +4,9 @@ var FB = require('fb'),
     censor = require('../censor'),
     AccessToken = require('../AccessToken'),
     FBPagePhotoIL = require('../FBPagePhotoIL'),
-    DownloadPhotoIL = require('../DownloadPhotoIL');
+    DownloadPhotoIL = require('../DownloadPhotoIL'),
+    ProcessPhotoIL = require('../ProcessPhotoIL'),
+    SocketIL = require('../SocketIL');
 
 /*
  * GET home page.
@@ -45,6 +47,14 @@ exports.index = function(req, res){
         
         if (!DownloadPhotoIL.isRunning()) {
           DownloadPhotoIL.run();
+        }        
+
+        if (!ProcessPhotoIL.isRunning()) {
+          ProcessPhotoIL.run();
+        }
+
+        if (!SocketIL.isRunning()) {
+          SocketIL.run();
         }
 
         FB.napi('/me', this);

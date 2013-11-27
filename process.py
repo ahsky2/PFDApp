@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import os
 # from pylab import imread,imshow,figure,show,subplot
 from numpy import reshape,uint8,array#,zeros
 from scipy.cluster.vq import kmeans,vq
@@ -12,6 +13,8 @@ import pymeanshift as pms
 import resize
 from collections import Counter
 import colorset as cs
+from random import randint
+import blend
 
 resize_w = 720
 resize_h = 720
@@ -19,23 +22,34 @@ face_ratio = 0.4
 
 cascade_fn='haarcascade_frontalface_alt2.xml'
 
+trg_num = 5
+
+print sys.argv
+# exit(-1001)
+
 if len(sys.argv) is 1:
-  print sys.argv[0], "src trg [width height face_ratio]"
+  print sys.argv[0], "src trg [trg_num width height face_ratio]"
   exit(-1)
 elif len(sys.argv) is 3:
   src = sys.argv[1]
   trg = sys.argv[2]
-elif len(sys.argv) is 5:
+elif len(sys.argv) is 4:
   src = sys.argv[1]
   trg = sys.argv[2]
-  resize_w = int(sys.argv[3])
-  resize_h = int(sys.argv[4])
+  trg_num = int(sys.argv[3])
 elif len(sys.argv) is 6:
   src = sys.argv[1]
   trg = sys.argv[2]
-  resize_w = int(sys.argv[3])
-  resize_h = int(sys.argv[4])
-  face_ratio = float(sys.argv[5])
+  trg_num = int(sys.argv[3])
+  resize_w = int(sys.argv[4])
+  resize_h = int(sys.argv[5])
+elif len(sys.argv) is 6:
+  src = sys.argv[1]
+  trg = sys.argv[2]
+  trg_num = int(sys.argv[3])
+  resize_w = int(sys.argv[4])
+  resize_h = int(sys.argv[5])
+  face_ratio = float(sys.argv[6])
 
 # img = imread(src)
 img = cv2.imread(src)
@@ -80,10 +94,6 @@ if len(rects) > 0:
   centers_idx = reshape(qnt, (r_img.shape[0], r_img.shape[1]))
   # clustered_img = centroids[centers_idx]
 
-  # set color face region
-  colors = array(cs.get())
-  # print colors
-
   m_w = int(face_w * 0.1)
   m_h = int(face_h * 0.1)
 
@@ -91,20 +101,49 @@ if len(rects) > 0:
   r_faces_idx = reshape(faces_idx, faces_idx.shape[0]*faces_idx.shape[1])
   cnt = Counter(r_faces_idx).most_common()
 
-  c_list = [0, 1, 2, 3]
-  i=0
-  for idx in cnt:
-    c_list.remove(idx[0]);
-    centroids[idx[0]] = colors[i]
-    i+=1
-  for idx in c_list:
-    print idx, i, color[i]
-    centroids[idx] = color[i]
-    i+=1
+  for n in range(trg_num):
+    # set color face region
+    colors = array(cs.get())
+    # print colors
 
-  color_img = centroids[centers_idx]
+    c_list = [0, 1, 2, 3]
+    i=0
+    for idx in cnt:
+      c_list.remove(idx[0]);
+      centroids[idx[0]] = colors[i]
+      i+=1
+    for idx in c_list:
+      print idx, i, colors[i]
+      centroids[idx] = colors[i]
+      i+=1
 
-  cv2.imwrite(trg, color_img)
+    color_img = centroids[centers_idx]
+
+    # blah
+    blah_file = "blah%d.png"%(randint(1, 3))
+    blah_img = cv2.imread(blah_file, cv.CV_LOAD_IMAGE_UNCHANGED)
+
+    # print blah_file, blah_img.shape
+
+    if r_img.shape[1] > r_img.shape[0]:
+      blah_size = randint(int(r_img.shape[1]*0.15),int(r_img.shape[1]*0.2))
+    else:
+      blah_size = randint(int(r_img.shape[0]*0.15),int(r_img.shape[0]*0.2))
+
+    # print blah_size
+
+    blah = cv2.resize(blah_img,(blah_size,blah_size))
+
+    if randint(0, 2) == 1:
+      p_x = randint(0,int(r_img.shape[1]*0.1))
+    else:
+      p_x = randint(int(r_img.shape[1]*0.9),r_img.shape[1]) - blah_size
+    p_y = randint(0,int(r_img.shape[0]*0.1))
+
+    color_img = blend.blend(color_img, blah, p_x, p_y)
+
+    f_name,f_ext = os.path.splitext(trg)
+    cv2.imwrite("%s_%02d%s"%(f_name, n, f_ext), color_img)
 
 
   # n_img = zeros((face_h-m_h*2, face_w-m_w*2, 3), dtype=uint8)

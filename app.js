@@ -15,7 +15,9 @@ var express = require('express'),
     FB = require('fb'),
     censor = require('./censor'),
     FBPagePhotoIL = require('./FBPagePhotoIL'),
-    DownloadPhotoIL = require('./DownloadPhotoIL');
+    DownloadPhotoIL = require('./DownloadPhotoIL'),
+    ProcessPhotoIL = require('./ProcessPhotoIL'),
+    SocketIL = require('./SocketIL');
 
 FB.options({
   appId:          config.facebook.appId,
@@ -27,6 +29,8 @@ FB.options({
 // Infinite Loop
 FBPagePhotoIL.init();
 DownloadPhotoIL.init();
+ProcessPhotoIL.init();
+SocketIL.init();
 
 // Sqlite3 DB
 Step(
@@ -49,6 +53,14 @@ Step(
 
       if (!DownloadPhotoIL.isRunning()) {
         DownloadPhotoIL.run();
+      }
+
+      if (!ProcessPhotoIL.isRunning()) {
+        ProcessPhotoIL.run();
+      }
+
+      if (!SocketIL.isRunning()) {
+        SocketIL.run();
       }
     }
   },
@@ -75,6 +87,7 @@ app.use(express.bodyParser());
 app.use(express.methodOverride());
 app.use(app.router);
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/process', express.static(path.join(__dirname, 'process')));
 
 // development only
 if ('development' == app.get('env')) {

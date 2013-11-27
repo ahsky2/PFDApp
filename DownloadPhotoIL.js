@@ -39,9 +39,11 @@
             var url = row.src;
             var fileName = row.object_id + '_' + row.width + 'x' + row.height +  url.substr(url.lastIndexOf("."));
 
+            console.log("Download : " + url);
+
             var writeStream = fs.createWriteStream(path.join(dowloadPath, fileName));
             writeStream.on('finish', function () {
-              console.log(row.object_id);
+              // console.log(row.object_id);
               FBPagePhoto.set('DOWNLOADED', row.object_id, group());
             });
 

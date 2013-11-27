@@ -21,4 +21,10 @@ config.facebook = {
     ]
 };
 
+config.process = {
+  url: config.rootUrl + 'process/',
+  port: 4000,
+  count: 5
+};
+
 module.exports = config;
