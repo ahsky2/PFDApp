@@ -12,6 +12,7 @@
     "step": "0.0.5",
     "sqlite3": "~2.1.19",
     "infinite-loop": "~0.2.2",
-    "request": "~2.27.0"
+    "request": "~2.27.0",
+    "form-data": "~0.1.2"
   }
 }

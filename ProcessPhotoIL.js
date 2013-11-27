@@ -4,7 +4,11 @@
         Step = require('step'),
         fs = require('fs'),
         path = require('path'),
+        FB = require('fb'),
         request = require('request'),
+        https = require('https'),//Https module of Node.js
+        fs = require('fs'), //FileSystem module of Node.js
+        FormData = require('form-data'), //Pretty multipart form maker.
         execFile = require('child_process').execFile,
         config = require('./config'),
         FBPagePhoto = require('./FBPagePhoto');
@@ -70,16 +74,73 @@
                 if (err !== null) {
                   console.log('exec error: ' + err);
                   status = 'ERROR_PROCESSED';
+                  FBPagePhoto.set(status, row.object_id, function () {
+                    setImmediate(function(){
+                      // console.log("IL resume");
+                      run();
+                    });
+                  });
                 } else {
                   status = 'PROCESSED';
-                }
-                
-                FBPagePhoto.set(status, row.object_id, function () {
-                  setImmediate(function(){
-                    // console.log("IL resume");
-                    run();
+                  FBPagePhoto.set(status, row.object_id, function () {
+                    setImmediate(function(){
+                      // console.log("IL resume");
+                      run();
+                    });
                   });
-                });
+
+                  // post
+                   
+                  var ACCESS_TOKEN = FB.getAccessToken();
+                  var upload_file = path.join(
+                    processPath, 
+                    row.object_id + '_' + row.width + 'x' + row.height + '_' + (Math.floor(Math.random()*5)+100).toString().substring(1) + url.substr(url.lastIndexOf("."))
+                  );
+                  // console.log(upload_file);
+                  var form = new FormData(); //Create multipart form
+                  form.append('source', fs.createReadStream(upload_file)); //Put file
+                  form.append('message', "PFD post"); //Put message
+                   
+                  //POST request options, notice 'path' has access_token parameter
+                  var options = {
+                      method: 'post',
+                      host: 'graph.facebook.com',
+                      path: '/757848304240284/photos?access_token='+ACCESS_TOKEN,
+                      headers: form.getHeaders(),
+                  }
+                   
+                  //Do POST request, callback for response
+                  var request = https.request(options, function (res){
+                    // console.log(res);
+                    var response = '';
+                    res.setEncoding('utf8');
+                    res.on('data', function (data) {
+                      // console.log(data);
+                      response += data;
+                    });
+
+                    // This never happens
+                    res.on('end', function(){
+                        // console.log("End received!");
+                        var post_id = JSON.parse(response).post_id;
+                        // console.log(JSON.parse(response).poset);
+                        FBPagePhoto.post(post_id, function () {});
+                    });
+
+                    // But this does
+                    res.on('close', function(){
+                        // console.log("Close received!");
+                    });
+                  });
+                   
+                  //Binds form to request
+                  form.pipe(request);
+                   
+                  //If anything goes wrong (request-wise not FB)
+                  request.on('error', function (error) {
+                       console.log(error);
+                  });
+                }
               }
             );
           } else {

@@ -97,14 +97,29 @@ exports.loginCallback = function (req, res, next) {
         code:           code
       }, this);
     },
+    function pageAcessToken(err, result) {
+      if(err) throw(err);
+      console.log(result);
+      FB.napi('me/accounts', {
+        access_token:  result.access_token
+      }, this)
+    },
     function extendAccessToken(err, result) {
       if(err) throw(err);
-
+      console.log(result);
+      var page_access_token;
+      for (var i in result.data) {
+        if (result.data[i].name == config.title) {
+          page_access_token = result.data[i].access_token;
+          break;
+        }
+      }
+      console.log(page_access_token);
       FB.napi('oauth/access_token', {
         client_id:          FB.options('appId'),
         client_secret:      FB.options('appSecret'),
         grant_type:         'fb_exchange_token',
-        fb_exchange_token:  result.access_token
+        fb_exchange_token:  page_access_token
       }, this);
     },
     function saveSession(err, result) {

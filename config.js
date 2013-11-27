@@ -13,11 +13,13 @@ config.facebook = {
     redirectUri: config.rootUrl + 'login/callback',
     scope: [
       'user_about_me',
-      'manage_pages' /*, 
+      'manage_pages', 
+      'publish_stream',
+      'photo_upload',
       'user_photos', 
       'friends_photos', 
       'user_photo_video_tags', 
-      'friends_photo_video_tags'*/
+      'friends_photo_video_tags'
     ]
 };
 

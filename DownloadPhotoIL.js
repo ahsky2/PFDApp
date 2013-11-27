@@ -18,7 +18,7 @@
         console.log(err);;
       });
 
-      il.setInterval(10*1000);
+      il.setInterval(20*1000);
 
       il.add(download);
     }
@@ -43,7 +43,7 @@
 
             var writeStream = fs.createWriteStream(path.join(dowloadPath, fileName));
             writeStream.on('finish', function () {
-              // console.log(row.object_id);
+              console.log(row.object_id);
               FBPagePhoto.set('DOWNLOADED', row.object_id, group());
             });
 
